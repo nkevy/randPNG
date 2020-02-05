@@ -44,26 +44,28 @@ func triFill(w,h int, fname string) bool{
 	//color also seeds rand
 	color := randColor()
 	bcolor := randColor()
+	fcolor := randColor()
 	img := getImage(w,h)
 	//draw2d for draw triangle side length
 	gcon := draw2dimg.NewGraphicContext(img)
 	gcon.SetStrokeColor(bcolor)
+	gcon.SetFillColor(fcolor)
 	gcon.SetLineWidth(float64(rand.Intn(3)+3))
 	//triangle def
 	tri := new_triangle()
 	for i:=w;i>-1;i--{
 		//fill
-		fcolor := randColor()
 		for j:=0;j<h;j++{
 			// 2 and 113 for tri
 			if (j%113)==0 && (i%113)==0 {
 				img.Set(i,j,bcolor)
-			}else if 0==i%3{
+			}else if 0==(i%3) {
+				img.Set(i,j,color)
+			}else if 0==(j%9){
 				img.Set(i,j,color)
 			}else{
 				// set triangle points (x,y,width,height) 
 				tri.set(i,j)
-				gcon.SetFillColor(fcolor)
 				gcon.MoveTo(float64(i),float64(j))
 				gcon.LineTo(float64(tri.points[1].X),float64(tri.points[1].Y))
 				gcon.MoveTo(float64(tri.points[1].X),float64(tri.points[1].Y))
@@ -95,14 +97,13 @@ func validname(name string) bool{
 func randColor() color.RGBA{
 	seed := time.Now().UnixNano()
         rand.Seed(seed)
-	fmt.Println(seed)
         //clr := rand.Intn(255)
 	//off := float64(clr)/float64(255)
 	r :=uint8(rand.Intn(255))
 	g :=uint8(rand.Intn(255))
 	b :=uint8(rand.Intn(255))
 	a :=uint8(rand.Intn(255))
-	fmt.Printf("%d %d %d %d\n",r,g,b,a)
+	//fmt.Printf("%d %d %d %d\n",r,g,b,a)
         return color.RGBA{r,g,b,a}
 }
 func ofc(c int) uint8{
@@ -123,7 +124,7 @@ func offColor() color.RGBA{
 	g :=ofc(cent)
 	b :=ofc(cent)
 	a :=ofc(cent)
-	fmt.Printf("%d %d %d %d\n",r,g,b,a)
+	//fmt.Printf("%d %d %d %d\n",r,g,b,a)
         return color.RGBA{r,g,b,a}
 }
 func fill(w,h int) image.Image{
