@@ -4,13 +4,85 @@ import(
 	"image"
 	"image/color"
 //	"image/draw"
-	"image/png"
+	"github.com/llgcode/draw2d/draw2dimg"
+//	"image/png"
 	"math/rand"
 	"strings"
 	"time"
 	"os"
  //      "errors"
 )
+type triangle struct{
+	//angle
+	points [3]image.Point
+}
+func  new_triangle() *triangle{
+	var tri triangle
+	tri.points[0]=image.Point{0,0}
+	tri.points[1]=image.Point{0,0}
+	tri.points[2]=image.Point{0,0}
+	return &tri
+}
+func (tri triangle) set(x,y int){
+		tri.points[0] = image.Point{x,y}
+		yoff := rand.Intn(1280)
+		xoff := rand.Intn(720)
+		p2x := (x+xoff)%720
+		p2y := (y+yoff)%1280
+		p3x := (p2x-xoff)%720
+		p3y := (p2y-yoff)%1280
+		tri.points[1] = image.Point{p2x,p2y}
+		tri.points[2] = image.Point{p3x,p3y}
+}
+func getImage(width,height int) *image.RGBA{
+	org := image.Point{X:0,Y:0}
+	max := image.Point{X:width,Y:height}
+	img := image.NewRGBA(image.Rectangle{org,max})
+	return img
+}
+func triFill(w,h int, fname string) bool{
+	//color also seeds rand
+	color := randColor()
+	bcolor := randColor()
+	img := getImage(w,h)
+	//draw2d for draw triangle side length
+	gcon := draw2dimg.NewGraphicContext(img)
+	gcon.SetStrokeColor(bcolor)
+	gcon.SetLineWidth(float64(rand.Intn(3)+3))
+	//triangle def
+	tri := new_triangle()
+	for i:=w;i>-1;i--{
+		//fill
+		fcolor := randColor()
+		for j:=0;j<h;j++{
+			// 2 and 113 for tri
+			if (j%113)==0 && (i%113)==0 {
+				img.Set(i,j,bcolor)
+			}else if 0==i%3{
+				img.Set(i,j,color)
+			}else{
+				// set triangle points (x,y,width,height) 
+				tri.set(i,j)
+				gcon.SetFillColor(fcolor)
+				gcon.MoveTo(float64(i),float64(j))
+				gcon.LineTo(float64(tri.points[1].X),float64(tri.points[1].Y))
+				gcon.MoveTo(float64(tri.points[1].X),float64(tri.points[1].Y))
+				gcon.LineTo(float64(tri.points[2].Y),float64(tri.points[2].Y))
+				gcon.MoveTo(float64(tri.points[2].X),float64(tri.points[2].Y))
+				gcon.LineTo(float64(i),float64(j))
+				gcon.FillStroke()
+				gcon.Close()
+
+			}
+			//boarder
+			if 0==i || 0==j || w==i || h==j{
+				img.Set(i,j,bcolor)
+			}
+		}
+	}
+	draw2dimg.SaveToPngFile(fname,img)
+	return true
+}
 func validname(name string) bool{
 	comp := []string{"?","%","*",":","|","\\","/"}
 	for _,c := range comp{
@@ -105,16 +177,16 @@ func cross(w,h int) image.Image{
 }
 func makePNG(fname string) bool{
 	filename := fname + ".png"
-	f,err := os.OpenFile(filename,os.O_WRONLY|os.O_CREATE,755)
-	defer f.Close()
-	if err!=nil{
-		return false
-	}
+	//f,err := os.OpenFile(filename,os.O_WRONLY|os.O_CREATE,755)
+	//defer f.Close()
+	//if err!=nil{
+	//	return false
+	//}
 	// 16:9 for phones is 1920x1080 or 1280x720
 	width:=720
 	height:=1280
-	png.Encode(f,hatch(width,height))
-	return true
+	return triFill(width,height,filename)
+	//png.Encode(f,hatch(width,height))
 }
 func main(){
 	if len(os.Args)!=2{
